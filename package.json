@@ -1,9 +1,9 @@
 {
   "name": "pull-unwind",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "./unwind.js",
   "description": "Unwind a json object into multiple json objects.",
-  "homepage": "https://github.com/tounano/pull-array-collate/",
+  "homepage": "https://github.com/tounano/pull-unwind/",
   "author": "ClickHere <js@clickhere.co.il>",
   "keywords": [
     "streams",
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tounano/pull-array-collate"
+    "url": "https://github.com/tounano/pull-unwind"
   },
   "engines": {
     "node": ">=0.6.11 <=0.7.0 || >=0.7.3"

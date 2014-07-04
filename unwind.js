@@ -1,52 +1,59 @@
 var _ = require("underscore");
 var pull = require("pull-stream");
 
-module.exports = pull.Through( function (read, unwindBy) {
-  var base, cbs=[], reading = false, unwindArray=[];
-  return function (end, cb) {
-    if (end) return cb(end);
+var unwindStream = pull.Through(function (read) {
+  var ended, unwinding
 
-    cbs.push(cb);
+  return function next (end, cb) {
+    if (unwinding)
+      return unwinding(end || ended, function (_end, data) {
+        if (_end) {
+          unwinding = null;
+          return next(end, cb);
+        }
 
-    ;(function drain() {
-      if (!base && !reading && cbs.length) {
-        reading = true;
-        var cb = cbs.shift();
-        return read(null, function (end, data) {
-          reading = false;
-          if (end) {cb(end); return drain(); }
-          cbs.unshift(cb);
-          base = _.clone(data);
-          if (_.isArray(base[unwindBy])) {
-            unwindArray = base[unwindBy];
-            delete base[unwindBy];
-          } else {
-            var offset;
-            if (parseInt(unwindBy))
-              offset = unwindBy;
-            else {
-              offset = parseInt(base[unwindBy]);
-              delete base[unwindBy];
-            }
+        cb(_end, data);
+      });
 
-            unwindArray = [];
-            for (var i = 0; i < offset; ++i)
-              unwindArray.push({});
-          }
-          drain();
-        });
+    read(end || ended, function (end, stream) {
+      if (end) {
+        ended = true;
+        return cb(end, null);
       }
 
-      if (base && !unwindArray.length && cbs.length ) {
-        base = null;
-        return drain();
-      }
-
-      if (cbs.length && base) {
-        var unwinded = _.extend({}, base, unwindArray.shift());
-        cbs.shift()(null, unwinded);
-        return drain();
-      }
-    })();
+      unwinding = stream;
+      return next(end, cb);
+    })
   }
+});
+
+var unwind = pull.Through( function (read, unwindBy) {
+  return unwindStream()(function (end, cb) {
+    read(end, function (end, data) {
+      if (end) return cb(end);
+
+      var base = _.clone(data), stream
+
+      if (typeof data === 'function') {
+        return cb(end, data)
+      } else if (_.isArray(data[unwindBy])) {
+        delete base[unwindBy];
+        stream = pull.values(data[unwindBy]);
+      } else if (parseInt(data[unwindBy])) {
+        delete base[unwindBy];
+        stream = pull.count(data[unwindBy] - 1);
+      } else if (parseInt(unwindBy)) {
+        stream = pull.count(unwindBy - 1);
+      } else
+        return cb(end, pull.values([data]));
+
+      cb(end, pull(
+        stream,
+        pull.map(function (d) { d = _.isObject(d) ? d : {}; return _.extend({}, base, d)})
+      ))
+    })
+  })
 })
+
+module.exports = unwind;
+module.exports.unwindStream = unwindStream;

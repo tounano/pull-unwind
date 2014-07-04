@@ -1,8 +1,8 @@
 {
   "name": "pull-unwind",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "./unwind.js",
-  "description": "Unwind a json object into multiple json objects.",
+  "description": "Unwind/flatten a complex stream to a simpler one.",
   "homepage": "https://github.com/tounano/pull-unwind/",
   "author": "ClickHere <js@clickhere.co.il>",
   "keywords": [

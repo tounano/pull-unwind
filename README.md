@@ -1,14 +1,14 @@
 # pull-unwind
 
-Unwind a json object into multiple json objects.
+Unwind/flatten a complex stream to a simpler one.
 
 Similar behaviour to MongoDB's `$unwind` in the aggregation framework.
 
 ## Usage
 
-### unwind(unwindBy)
+### unwind(?unwindBy)
 
-`unwindBy` can be an integer or a property name.
+`unwindBy` can be an integer or a property name. If you're unwinding a stream, you can leave this arg blank.
 
 If it's an integer `X`, the event would be cloned `X` times.
 
@@ -17,7 +17,27 @@ it will work the same way as specifying an integer.
 
 In case it's an array, the array will be unwinded and it's contents would be extended to the `base` object, one-by-one.
 
+In case it's a stream, it'll unwind it.
+
 ## Examples
+
+### unwindBy is blank (unwinding streams)
+
+```js
+var pull = require("pull-stream");
+var unwind = require("pull-unwind");
+
+var streamOfStreams = pull.values([
+    pull.values([1,2,3,4,5]),
+    pull.values([6,7,8])
+]);
+
+pull(
+  streamOfStreams,
+  unwind(),
+  pull.log()
+)
+```
 
 ### unwindBy is an Integer
 
